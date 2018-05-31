@@ -1,6 +1,7 @@
 package util
 
 import (
+	. "github.com/zt3862266/go/log"
 	"io/ioutil"
 	"net/http"
 	"net/url"
