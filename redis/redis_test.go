@@ -1,6 +1,7 @@
 package redis
 
 import (
+	. "github.com/zt3862266/go/config"
 	. "github.com/zt3862266/go/log"
 	"testing"
 )

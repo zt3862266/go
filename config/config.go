@@ -1,9 +1,9 @@
 package config
 
 import (
-	"io/ioutil"
-	"flag"
 	"encoding/json"
+	"flag"
+	"io/ioutil"
 )
 
 type EnvConfig struct {
@@ -63,16 +63,16 @@ type EnvConfig struct {
 	} `json:"redis"`
 }
 
-var GlobalEnv EnvConfig;
+var GlobalEnv EnvConfig
 
-func LoadEnv(){
-	jsonFile := flag.String("c","../config/env.json","the path of the env file")
+func LoadEnv() {
+	jsonFile := flag.String("c", "./config/env.json", "the path of the env file")
 	flag.Parse()
-	bytes,err := ioutil.ReadFile(*jsonFile)
-	if err !=nil{
+	bytes, err := ioutil.ReadFile(*jsonFile)
+	if err != nil {
 		panic("read file error")
 	}
-	if err = json.Unmarshal(bytes,&GlobalEnv);err !=nil{
+	if err = json.Unmarshal(bytes, &GlobalEnv); err != nil {
 		panic("json unmarshal error")
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
 	"github.com/zt3862266/go/config"
+	. "github.com/zt3862266/go/log"
 	"math/rand"
 	"time"
 )

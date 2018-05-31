@@ -1,9 +1,6 @@
 package log
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"testing"
 )
@@ -21,19 +18,5 @@ func TestWrite(t *testing.T) {
 
 		Error("this is a error log,this is a error log,this is a error log,this is a error log,this is a error log,this is a error log,")
 	}
-
-}
-
-func TestJson(t *testing.T) {
-
-	bytes, err := ioutil.ReadFile("config/env.json")
-	if err != nil {
-		fmt.Printf("read file error,%v", err)
-	}
-	var objEvn = &EnvConfig{}
-	if err = json.Unmarshal(bytes, objEvn); err != nil {
-		fmt.Printf("json unmarshal error,%s", err)
-	}
-	fmt.Printf("%+v", objEvn.Mysql.Database.Slave)
 
 }
