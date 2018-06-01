@@ -31,9 +31,14 @@ func NewHttpClient(maxIdleConns, maxIdleConnsPerHost, idleConnTimeout int) *http
 	return &client
 }
 
-func SendPost(client *http.Client, postUrl string, param url.Values) (ret []byte, err error) {
+func SendPost(client *http.Client, postUrl string, param url.Values, header map[string]string) (ret []byte, err error) {
 	req, _ := http.NewRequest("POST", postUrl, strings.NewReader(param.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded ")
+	if len(header) > 0 {
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
+	}
 	response, err := client.Do(req)
 
 	if err != nil {
