@@ -16,18 +16,17 @@ func NewHttpClient(maxIdleConns, maxIdleConnsPerHost, idleConnTimeout int) *http
 		MaxIdleConns:        maxIdleConns,
 		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 		IdleConnTimeout:     time.Duration(idleConnTimeout) * time.Second,
-		Dial: func(netw, addr string) (net.Conn, error) {
-			c, err := net.DialTimeout(netw, addr, time.Second)
-			if err != nil {
-				Error("dail timeout", err)
-				return nil, err
-			}
-			return c, nil
-
-		},
+		Dial: (&net.Dialer{
+			Timeout:   1 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ResponseHeaderTimeout: 5 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
 	client := http.Client{
 		Transport: transport,
+		Timeout:   1 * time.Second,
 	}
 	return &client
 }
