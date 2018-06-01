@@ -3,6 +3,7 @@ package util
 import (
 	. "github.com/zt3862266/go/log"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +16,15 @@ func NewHttpClient(maxIdleConns, maxIdleConnsPerHost, idleConnTimeout int) *http
 		MaxIdleConns:        maxIdleConns,
 		MaxIdleConnsPerHost: maxIdleConnsPerHost,
 		IdleConnTimeout:     time.Duration(idleConnTimeout) * time.Second,
+		Dial: func(netw, addr string) (net.Conn, error) {
+			c, err := net.DialTimeout(netw, addr, time.Second)
+			if err != nil {
+				Error("dail timeout", err)
+				return nil, err
+			}
+			return c, nil
+
+		},
 	}
 	client := http.Client{
 		Transport: transport,
