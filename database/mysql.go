@@ -150,13 +150,19 @@ func SDB() (pool *sql.DB, err error) {
 		return nil, errors.New("no valid slave")
 	}
 	chooseIdx := rand.Intn(slaveLen)
+	i := 0
 	for {
+		if i > 3 {
+			break
+		}
 		if db.Slave[chooseIdx].Status == mysqlStatusOk {
 			return db.Slave[chooseIdx].Ndb, nil
 		} else {
 			chooseIdx = (chooseIdx + 1) % slaveLen
 		}
+		i = i + 1
 	}
+	return nil, errors.New("no valid slave for retry 3 times")
 }
 
 func MDB() (pool *sql.DB, err error) {
