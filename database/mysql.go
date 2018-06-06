@@ -154,7 +154,7 @@ func SDB() (pool *sql.DB, err error) {
 		if db.Slave[chooseIdx].Status == mysqlStatusOk {
 			return db.Slave[chooseIdx].Ndb, nil
 		} else {
-			chooseIdx = (chooseIdx - 1) % slaveLen
+			chooseIdx = (chooseIdx + 1) % slaveLen
 		}
 	}
 }
