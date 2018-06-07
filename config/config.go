@@ -8,10 +8,10 @@ import (
 
 type EnvConfig struct {
 	Log struct {
-		Compress  bool   `json:"compress"`
-		File      string `json:"file"`
-		KeyPrefix string `json:"key_prefix"`
-		MaxSize   int    `json:"max_size"`
+		Access      string `json:"access"`
+		Application string `json:"application"`
+		Compress    bool   `json:"compress"`
+		MaxSize     int    `json:"max_size"`
 	} `json:"log"`
 	Mysql struct {
 		ConnnectTimeout int `json:"connnect_timeout"`
