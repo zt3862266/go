@@ -2,20 +2,17 @@ package redis
 
 import (
 	"errors"
+	"math/rand"
+	"time"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/zt3862266/go/config"
 	. "github.com/zt3862266/go/log"
-	"math/rand"
-	"time"
 )
 
 var (
 	IdleTimeout = time.Minute
 	cachePool   []*redis.Pool
-)
-
-const (
-	moduleKeyPrefix = "c:wd:"
 )
 
 type RongCache struct {
@@ -71,7 +68,6 @@ func (r *RongCache) Set(key, value string, ttl int) (err error) {
 	}
 	conn := pool.Get()
 	defer conn.Close()
-	key = moduleKeyPrefix + key
 	_, err = conn.Do("SET", key, value, "EX", ttl)
 	if err != nil {
 		Error("set failed:%v", err.Error())
@@ -88,7 +84,6 @@ func (r *RongCache) Get(key string) (value string, err error) {
 	}
 	conn := pool.Get()
 	defer conn.Close()
-	key = moduleKeyPrefix + key
 	value, err = redis.String(conn.Do("GET", key))
 	if err != nil {
 		Error("get failed:%v", err.Error())
