@@ -40,9 +40,11 @@ func InitRedis() {
 				if err != nil {
 					return nil, err
 				}
-				if _, err := c.Do("AUTH", conf.Password); err != nil {
-					c.Close()
-					return nil, err
+				if conf.Password != "" {
+					if _, err := c.Do("AUTH", conf.Password); err != nil {
+						c.Close()
+						return nil, err
+					}
 				}
 				return c, err
 			},
