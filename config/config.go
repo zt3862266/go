@@ -43,7 +43,7 @@ type EnvConfig struct {
 				Secret      string `json:"secret"`
 				VerifyToken int    `json:"verify_token"`
 			} `json:"acl"`
-			Machine []string `json:"machine"`
+			Machine string `json:"machine"`
 			Talk    struct {
 				ConnectionTimeoutMs int `json:"connection_timeout_ms"`
 				ReadTimeoutMs       int `json:"read_timeout_ms"`
