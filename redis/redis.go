@@ -86,7 +86,9 @@ func (r *RongCache) Get(key string) (value string, err error) {
 	defer conn.Close()
 	value, err = redis.String(conn.Do("GET", key))
 	if err != nil {
-		Error("get failed:%v", err.Error())
+		if err.Error() != "redigo: nil returned" {
+			Error("get failed:%v", err.Error())
+		}
 	}
 	return value, err
 }
