@@ -48,7 +48,7 @@ func SendPost(client *http.Client, postUrl string, param url.Values, header map[
 	defer response.Body.Close()
 	statusCode := response.StatusCode
 	retStr, err := ioutil.ReadAll(response.Body)
-	Info("send post,url:%s,msg:%s,ret:%s", postUrl, param, retStr)
+	//Info("send post,url:%s,msg:%s,ret:%s", postUrl, param, retStr)
 	if err != nil {
 		Warn("get response failed,url:%s,err:%s,statusCode:%d", postUrl, err, statusCode)
 		return nil, err
