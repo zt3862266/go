@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+//some statistics for cache miss rate
+type stats struct {
+	hitCount  uint64
+	missCount uint64
+	hitRate   float64
+}
+
 // LRUCache is a typical LRU cache implementation.  If the cache
 // reaches the capacity, the least recently used item is deleted from
 // the cache. Note the capacity is not the number of items, but the
@@ -34,6 +41,8 @@ type LRUCache struct {
 
 	// How much we are limiting the cache to.
 	capacity int64
+
+	st stats
 }
 
 // Value is the interface values that go into LRUCache need to satisfy
@@ -61,6 +70,7 @@ func NewLRUCache(capacity int64) *LRUCache {
 		list:     list.New(),
 		table:    make(map[string]*list.Element),
 		capacity: capacity,
+		st:       stats{},
 	}
 }
 
@@ -72,8 +82,10 @@ func (lru *LRUCache) Get(key string) (v Value, ok bool) {
 
 	element := lru.table[key]
 	if element == nil {
+		lru.st.missCount = lru.st.missCount + 1
 		return nil, false
 	}
+	lru.st.hitCount = lru.st.hitCount + 1
 	lru.moveToFront(element)
 	return element.Value.(*entry).value, true
 }
@@ -141,13 +153,16 @@ func (lru *LRUCache) SetCapacity(capacity int64) {
 }
 
 // Stats returns a few stats on the cache.
-func (lru *LRUCache) Stats() (length, size, capacity int64, oldest time.Time) {
+func (lru *LRUCache) Stats() (length, size, capacity int64, oldest time.Time, hitCount uint64, missCount uint64, hitRate float64) {
 	lru.mu.Lock()
 	defer lru.mu.Unlock()
 	if lastElem := lru.list.Back(); lastElem != nil {
 		oldest = lastElem.Value.(*entry).time_accessed
 	}
-	return int64(lru.list.Len()), lru.size, lru.capacity, oldest
+	hitCount = lru.st.hitCount
+	missCount = lru.st.missCount
+	hitRate = float64(lru.st.hitCount) / float64(lru.st.hitCount+lru.st.missCount)
+	return int64(lru.list.Len()), lru.size, lru.capacity, oldest, hitCount, missCount, hitRate
 }
 
 // StatsJSON returns stats as a JSON object in a string.
@@ -155,8 +170,9 @@ func (lru *LRUCache) StatsJSON() string {
 	if lru == nil {
 		return "{}"
 	}
-	l, s, c, o := lru.Stats()
-	return fmt.Sprintf("{\"Length\": %v, \"Size\": %v, \"Capacity\": %v, \"OldestAccess\": \"%v\"}", l, s, c, o)
+	l, s, c, o, h, m, hr := lru.Stats()
+	return fmt.Sprintf("{\"Length\": %v, \"Size\": %v, \"Capacity\": %v, \"OldestAccess\": \"%v\",\"HitCount\":%v, \"MissCount\": %v ,\"HitRate\": %v}",
+		l, s, c, o, h, m, hr)
 }
 
 // Length returns how many elements are in the cache
