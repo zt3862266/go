@@ -87,6 +87,8 @@ func (p *Pool)resize(step int){
 func (p *Pool) Get() (conn Conn, err error){
 
 	f  := func() {
+		p.lock.Lock()
+		defer p.lock.Unlock()
 		//chan 为空 而且未达到 MaxSize,可以继续创建 Conn
 		if len(p.PoolChan) == 0 && p.Size < p.MaxSize {
 			p.lock.Lock()
