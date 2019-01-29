@@ -28,7 +28,7 @@ type Pool struct{
 
 // conn struct
 type Conn interface{
-	Close()
+	Close() error
 }
 
 // connection的一层wrapper,增加了连接创造时间
