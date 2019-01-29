@@ -20,7 +20,7 @@ type Pool struct{
 	MaxSize int
 	Size int
 	MaxIdleTime time.Duration
-	Factory func() (interface{},error)
+	Factory func() (Conn,error)
 	lock *sync.Mutex
 	PoolChan chan connWrapper
 
@@ -38,7 +38,7 @@ type connWrapper struct{
 }
 
 
-func NewPool(factory func() (interface{},error) ,initSize int,maxSize int,maxIdleTime time.Duration) (pool *Pool,err error){
+func NewPool(factory func() (Conn,error) ,initSize int,maxSize int,maxIdleTime time.Duration) (pool *Pool,err error){
 
 	if initSize < 1 || maxSize < 1 || initSize > maxSize {
 		return pool,ErrWrongParam
