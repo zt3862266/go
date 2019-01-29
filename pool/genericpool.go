@@ -78,7 +78,7 @@ func NewPool(factory func() (Conn,error) ,initSize int,maxSize int,maxIdleTime t
 	return pool,nil
 }
 
-func (p *Pool)Resize(step int){
+func (p *Pool)resize(step int){
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.Size = p.Size + step
@@ -111,7 +111,7 @@ func (p *Pool) Get() (conn Conn, err error){
 			case connWrapper,ok := <- p.PoolChan:
 				if ok {
 					if time.Since(connWrapper.CreateTime) > p.MaxIdleTime{
-						p.Resize(-1)
+						p.resize(-1)
 						connWrapper.Conn.Close()
 						log.Info("conn idle timeout:%v",ErrIdletimeOut)
 						continue
@@ -128,7 +128,7 @@ func (p *Pool) Get() (conn Conn, err error){
 	}
 }
 
-func (p *Pool) release(conn Conn) error{
+func (p *Pool) Release(conn Conn) error{
 	p.PoolChan <- connWrapper{
 		Conn:conn,
 		CreateTime:time.Now(),
