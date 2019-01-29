@@ -116,7 +116,7 @@ func (p *Pool) Get() (conn Conn, err error){
 						log.Info("conn idle timeout:%v",ErrIdletimeOut)
 						continue
 					}else {
-						return conn, nil
+						return connWrapper.Conn, nil
 					}
 				}else{
 					return nil,ErrChanClosed
