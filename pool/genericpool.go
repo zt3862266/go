@@ -110,7 +110,7 @@ func (p *Pool) Get() (conn Conn, err error){
 		select{
 			case connWrapper,ok := <- p.PoolChan:
 				if ok {
-					if time.Since(connWrapper.CreateTime) > p.MaxIdleTime{
+					if connWrapper.CreateTime.Add(p.MaxIdleTime).Before(time.Now()) {
 						p.resize(-1)
 						connWrapper.Conn.Close()
 						log.Info("conn idle timeout:%v",ErrIdletimeOut)
