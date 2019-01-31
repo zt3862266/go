@@ -11,14 +11,14 @@ var(
 	ErrWrongParam = errors.New("pool config invalid")
 	ErrConnFailed = errors.New("Connection failed")
 	ErrChanClosed = errors.New("channel is closed")
-	ErrIdletimeOut = errors.New("exceed max idle time")
+	ErrIdleTimeOut = errors.New("exceed max idle time")
+	ErrNilConn = errors.New("connection is nil,reject")
 )
 
 // this is connection pool struct
 type Pool struct{
 	InitSize int
 	MaxSize int
-	Size int
 	MaxIdleTime time.Duration
 	Factory func() (Conn,error)
 	lock *sync.Mutex
@@ -41,7 +41,7 @@ type connWrapper struct{
 func NewPool(factory func() (Conn,error) ,initSize int,maxSize int,maxIdleTime time.Duration) (pool *Pool,err error){
 
 	if initSize < 1 || maxSize < 1 || initSize > maxSize {
-		return pool,ErrWrongParam
+		return nil,ErrWrongParam
 	}
 	pool = &Pool{
 		InitSize:initSize,
@@ -49,28 +49,22 @@ func NewPool(factory func() (Conn,error) ,initSize int,maxSize int,maxIdleTime t
 		MaxIdleTime:maxIdleTime,
 		lock:  &sync.Mutex{},
 		PoolChan:make(chan connWrapper,maxSize),
-		Size:0,
 		Factory:factory,
 	}
 	for i:=0;i<initSize;i++{
 		conn ,err := factory()
 		if err !=nil{
-			return pool,ErrConnFailed
+			return nil,ErrConnFailed
 		}
-		value,ok :=conn.(Conn)
-
-		if ok{
-			pool.Size = pool.Size+1
-			pool.PoolChan <-  connWrapper{
-				Conn:value,
-				CreateTime:time.Now(),
-			}
+		pool.PoolChan <-  connWrapper{
+			Conn:conn,
+			CreateTime:time.Now(),
 		}
 	}
 	go func(pool *Pool){
 
 		for{
-			log.Info("pool InitSize:%d,MaxSize:%d,Size:%d,poolLen:%d",pool.InitSize,pool.MaxSize,pool.Size, len(pool.PoolChan))
+			log.Info("pool InitSize:%d,MaxSize:%d,poolLen:%d",pool.InitSize,pool.MaxSize,len(pool.PoolChan))
 			time.Sleep(time.Second *5)
 		}
 
@@ -78,30 +72,20 @@ func NewPool(factory func() (Conn,error) ,initSize int,maxSize int,maxIdleTime t
 	return pool,nil
 }
 
-func (p *Pool)resize(step int){
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.Size = p.Size + step
-}
 
 func (p *Pool) Get() (conn Conn, err error){
 
 	f  := func() {
 		p.lock.Lock()
 		defer p.lock.Unlock()
-		//chan 为空 而且未达到 MaxSize,可以继续创建 Conn
-		if len(p.PoolChan) == 0 && p.Size < p.MaxSize {
+		if len(p.PoolChan) == 0  {
 			conn, err := p.Factory()
 			if err != nil {
 				return
 			}
-			value, ok := conn.(Conn)
-			if ok {
-				p.Size = p.Size+1
-				p.PoolChan <- connWrapper{
-					Conn:value,
-					CreateTime:time.Now(),
-				}
+			p.PoolChan <- connWrapper{
+				Conn:conn,
+				CreateTime:time.Now(),
 			}
 		}
 	}
@@ -110,9 +94,8 @@ func (p *Pool) Get() (conn Conn, err error){
 			case connWrapper,ok := <- p.PoolChan:
 				if ok {
 					if connWrapper.CreateTime.Add(p.MaxIdleTime).Before(time.Now()) {
-						p.resize(-1)
 						connWrapper.Conn.Close()
-						log.Info("conn idle timeout:%v",ErrIdletimeOut)
+						log.Info("conn idle timeout:%v",ErrIdleTimeOut)
 						continue
 					}else {
 						return connWrapper.Conn, nil
@@ -120,17 +103,28 @@ func (p *Pool) Get() (conn Conn, err error){
 				}else{
 					return nil,ErrChanClosed
 				}
-		default:
-			f()
+			default:
+				f()
 		}
 
 	}
 }
 
 func (p *Pool) Release(conn Conn) error{
-	p.PoolChan <- connWrapper{
-		Conn:conn,
-		CreateTime:time.Now(),
+	if conn ==nil{
+		return ErrNilConn
+	}
+
+	p.lock.Lock()
+	select{
+		case p.PoolChan <- connWrapper{Conn:conn, CreateTime:time.Now(),}:
+			p.lock.Unlock()
+			return nil
+		default:
+			p.lock.Unlock()
+			log.Info("conn chan full,close")
+			return conn.Close()
+
 	}
 	return nil
 }
@@ -139,6 +133,5 @@ func (p *Pool) close(){
 	for connWrapper := range p.PoolChan{
 		connWrapper.Conn.Close()
 	}
-	p.Size =0
 	p.Factory = nil
 }
