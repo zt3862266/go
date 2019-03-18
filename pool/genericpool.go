@@ -3,7 +3,8 @@ package genericpool
 import (
 	"time"
 	"sync"
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/zt3862266/go/log"
 )
 
