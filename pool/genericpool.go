@@ -64,7 +64,7 @@ func NewPool(factory func() (Conn, error), initSize int, maxSize int, maxIdleTim
 
 		for {
 			log.Info("pool InitSize:%d,MaxSize:%d,poolLen:%d", pool.InitSize, pool.MaxSize, len(pool.PoolChan))
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Minute)
 		}
 
 	}(pool)
